@@ -507,7 +507,7 @@ public class MinifyMojo extends AbstractMojo {
     }
 
     private ClosureConfig fillClosureConfig() {
-        List<SourceFile> externs = new ArrayList<>();
+        List<SourceFile> externs = new ArrayList<SourceFile>();
         for (String extern : closureExterns) {
             externs.add(SourceFile.fromFile(webappSourceDir + File.separator + extern, Charset.forName(charset)));
         }

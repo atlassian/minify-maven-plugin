@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.mozilla.javascript.EvaluatorException;
 
@@ -97,10 +98,17 @@ public class ProcessJSFilesTask extends ProcessFilesTask {
      */
     @Override
     protected void minify(File mergedFile, File minifiedFile) throws IOException {
-        try (InputStream in = new FileInputStream(mergedFile);
-                OutputStream out = new FileOutputStream(minifiedFile);
-                InputStreamReader reader = new InputStreamReader(in, charset);
-                OutputStreamWriter writer = new OutputStreamWriter(out, charset)) {
+        InputStream in = null;
+        OutputStream out = null;
+        InputStreamReader reader = null;
+        OutputStreamWriter writer = null;
+
+        try {
+            in = new FileInputStream(mergedFile);
+            out = new FileOutputStream(minifiedFile);
+            reader = new InputStreamReader(in, charset);
+            writer = new OutputStreamWriter(out, charset);
+
             log.info("Creating the minified file [" + ((verbose) ? minifiedFile.getPath() : minifiedFile.getName())
                     + "].");
 
@@ -112,7 +120,7 @@ public class ProcessJSFilesTask extends ProcessFilesTask {
                     closureConfig.getCompilationLevel().setOptionsForCompilationLevel(options);
                     options.setOutputCharset(charset);
                     options.setLanguageIn(closureConfig.getLanguage());
-                    options.setAngularPass(closureConfig.getAngularPass());
+//                    options.setAngularPass(closureConfig.getAngularPass());
 
                     File sourceMapResult = new File(minifiedFile.getPath() + ".map");
                     if (closureConfig.getSourceMapFormat() != null) {
@@ -163,17 +171,26 @@ public class ProcessJSFilesTask extends ProcessFilesTask {
                     "Failed to compress the JavaScript file ["
                             + ((verbose) ? mergedFile.getPath() : mergedFile.getName()) + "].", e);
             throw e;
+        } finally {
+            IOUtils.closeQuietly(reader);
+            IOUtils.closeQuietly(writer);
+            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(out);
         }
 
         logCompressionGains(mergedFile, minifiedFile);
     }
 
     private void flushSourceMap(File sourceMapOutputFile, String minifyFileName, SourceMap sourceMap) {
-        try (FileWriter out = new FileWriter(sourceMapOutputFile)) {
+        FileWriter out = null;
+        try {
+            out = new FileWriter(sourceMapOutputFile);
             sourceMap.appendTo(out, minifyFileName);
         } catch (IOException e) {
             log.error("Failed to write the JavaScript Source Map file ["
                     + ((verbose) ? sourceMapOutputFile.getPath() : sourceMapOutputFile.getName()) + "].", e);
+        } finally {
+            IOUtils.closeQuietly(out);
         }
     }
 }
