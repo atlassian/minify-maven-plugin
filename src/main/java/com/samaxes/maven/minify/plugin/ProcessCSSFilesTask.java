@@ -29,7 +29,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
 
 import com.samaxes.maven.minify.common.YuiConfig;
@@ -83,16 +82,10 @@ public class ProcessCSSFilesTask extends ProcessFilesTask {
      */
     @Override
     protected void minify(File mergedFile, File minifiedFile) throws IOException {
-        InputStream in = null;
-        OutputStream out = null;
-        InputStreamReader reader = null;
-        OutputStreamWriter writer = null;
-        try {
-            in = new FileInputStream(mergedFile);
-            out = new FileOutputStream(minifiedFile);
-            reader = new InputStreamReader(in, charset);
-            writer = new OutputStreamWriter(out, charset);
-
+        try (InputStream in = new FileInputStream(mergedFile);
+                OutputStream out = new FileOutputStream(minifiedFile);
+                InputStreamReader reader = new InputStreamReader(in, charset);
+                OutputStreamWriter writer = new OutputStreamWriter(out, charset)) {
             log.info("Creating the minified file [" + ((verbose) ? minifiedFile.getPath() : minifiedFile.getName())
                     + "].");
 
@@ -111,12 +104,6 @@ public class ProcessCSSFilesTask extends ProcessFilesTask {
             log.error("Failed to compress the CSS file [" + ((verbose) ? mergedFile.getPath() : mergedFile.getName())
                     + "].", e);
             throw e;
-        }
-        finally {
-            IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(writer);
-            IOUtils.closeQuietly(in);
-            IOUtils.closeQuietly(out);
         }
 
         logCompressionGains(mergedFile, minifiedFile);

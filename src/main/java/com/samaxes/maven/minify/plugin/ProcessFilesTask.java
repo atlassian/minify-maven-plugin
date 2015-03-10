@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
@@ -162,10 +161,8 @@ public abstract class ProcessFilesTask implements Callable<Object> {
                         File targetPath = new File(targetDir.getAbsolutePath() + subPath);
                         targetPath.mkdirs();
 
-                        String mergedFileBasename = FileUtils.basename(mergedFile.getName());
-                        mergedFileBasename = mergedFileBasename.substring(0, mergedFileBasename.length() - 1);
                         File minifiedFile = new File(targetPath, (nosuffix) ? mergedFile.getName()
-                                : mergedFileBasename + suffix
+                                : FileUtils.basename(mergedFile.getName()) + suffix
                                         + FileUtils.getExtension(mergedFile.getName()));
                         minify(mergedFile, minifiedFile);
                     }
@@ -202,26 +199,16 @@ public abstract class ProcessFilesTask implements Callable<Object> {
      * @throws IOException when the merge step fails
      */
     protected void merge(File mergedFile) throws IOException {
-        InputStream sequence = null;
-        OutputStream out = null;
-        InputStreamReader sequenceReader = null;
-        OutputStreamWriter outWriter = null;
-        try {
-            sequence = new SequenceInputStream(new SourceFilesEnumeration(log, files, verbose));
-            out = new FileOutputStream(mergedFile);
-            sequenceReader = new InputStreamReader(sequence, charset);
-            outWriter = new OutputStreamWriter(out, charset);
+        try (InputStream sequence = new SequenceInputStream(new SourceFilesEnumeration(log, files, verbose));
+                OutputStream out = new FileOutputStream(mergedFile);
+                InputStreamReader sequenceReader = new InputStreamReader(sequence, charset);
+                OutputStreamWriter outWriter = new OutputStreamWriter(out, charset)) {
             log.info("Creating the merged file [" + ((verbose) ? mergedFile.getPath() : mergedFile.getName()) + "].");
 
             IOUtil.copy(sequenceReader, outWriter, bufferSize);
         } catch (IOException e) {
             log.error("Failed to concatenate files.", e);
             throw e;
-        } finally {
-            IOUtils.closeQuietly(sequenceReader);
-            IOUtils.closeQuietly(outWriter);
-            IOUtils.closeQuietly(sequence);
-            IOUtils.closeQuietly(out);
         }
     }
 
@@ -244,19 +231,10 @@ public abstract class ProcessFilesTask implements Callable<Object> {
         try {
             File temp = File.createTempFile(minifiedFile.getName(), ".gz");
 
-            InputStream in = null;
-            OutputStream out = null;
-            GZIPOutputStream outGZIP = null;
-
-            try {
-                in = new FileInputStream(minifiedFile);
-                out = new FileOutputStream(temp);
-                outGZIP = new GZIPOutputStream(out);
+            try (InputStream in = new FileInputStream(minifiedFile);
+                    OutputStream out = new FileOutputStream(temp);
+                    GZIPOutputStream outGZIP = new GZIPOutputStream(out)) {
                 IOUtil.copy(in, outGZIP, bufferSize);
-            } finally {
-                IOUtils.closeQuietly(outGZIP);
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(out);
             }
 
             log.info("Uncompressed size: " + mergedFile.length() + " bytes.");
