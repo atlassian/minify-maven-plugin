@@ -35,6 +35,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.mozilla.javascript.EvaluatorException;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
@@ -120,7 +121,8 @@ public class ProcessJSFilesTask extends ProcessFilesTask {
                     closureConfig.getCompilationLevel().setOptionsForCompilationLevel(options);
                     options.setOutputCharset(charset);
                     options.setLanguageIn(closureConfig.getLanguage());
-//                    options.setAngularPass(closureConfig.getAngularPass());
+                    options.setAngularPass(closureConfig.getAngularPass());
+                    options.setDependencyOptions(closureConfig.getDependencyOptions());
 
                     File sourceMapResult = new File(minifiedFile.getPath() + ".map");
                     if (closureConfig.getSourceMapFormat() != null) {
@@ -132,6 +134,9 @@ public class ProcessJSFilesTask extends ProcessFilesTask {
 
                     SourceFile input = SourceFile.fromInputStream(mergedFile.getName(), in);
                     List<SourceFile> externs = closureConfig.getExterns();
+                    if (closureConfig.getUseDefaultExterns()) {
+                        externs.addAll(CommandLineRunner.getDefaultExterns());
+                    }
 
                     Compiler compiler = new Compiler();
                     compiler.compile(externs, Lists.newArrayList(input), options);

@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
@@ -35,7 +36,11 @@ public class ClosureConfig {
 
     private final CompilationLevel compilationLevel;
 
+    private final DependencyOptions dependencyOptions;
+
     private final List<SourceFile> externs;
+
+    private final Boolean useDefaultExterns;
 
     private final Format sourceMapFormat;
 
@@ -46,15 +51,19 @@ public class ClosureConfig {
      *
      * @param language the version of ECMAScript used to report errors in the code
      * @param compilationLevel the degree of compression and optimization to apply to JavaScript
+     * @param dependencyOptions options for how to manage dependencies between input files
      * @param externs preserve symbols that are defined outside of the code you are compiling
+     * @param useDefaultExterns use default externs packed with the Closure Compiler
      * @param createSourceMap create a source map for the minifed/combined production files
      * @param angularPass use {@code @ngInject} annotation to generate Angular injections
      */
-    public ClosureConfig(LanguageMode language, CompilationLevel compilationLevel, List<SourceFile> externs,
-            boolean createSourceMap, boolean angularPass) {
+    public ClosureConfig(LanguageMode language, CompilationLevel compilationLevel, DependencyOptions dependencyOptions,
+            List<SourceFile> externs, boolean useDefaultExterns, boolean createSourceMap, boolean angularPass) {
         this.language = language;
         this.compilationLevel = compilationLevel;
+        this.dependencyOptions = dependencyOptions;
         this.externs = externs;
+        this.useDefaultExterns = useDefaultExterns;
         this.sourceMapFormat = (createSourceMap) ? SourceMap.Format.V3 : null;
         this.angularPass = angularPass;
     }
@@ -78,12 +87,30 @@ public class ClosureConfig {
     }
 
     /**
+     * Gets the dependencyOptions.
+     *
+     * @return the dependencyOptions
+     */
+    public DependencyOptions getDependencyOptions() {
+        return dependencyOptions;
+    }
+
+    /**
      * Gets the externs.
      *
      * @return the externs
      */
     public List<SourceFile> getExterns() {
         return externs;
+    }
+
+    /**
+     * Gets the useDefaultExterns.
+     *
+     * @return the useDefaultExterns
+     */
+    public Boolean getUseDefaultExterns() {
+        return useDefaultExterns;
     }
 
     /**
