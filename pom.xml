@@ -10,7 +10,7 @@
 
     <groupId>com.samaxes.maven</groupId>
     <artifactId>minify-maven-plugin</artifactId>
-    <version>1.7.5-SNAPSHOT</version>
+    <version>1.7.4.atlassian.3</version>
     <packaging>maven-plugin</packaging>
 
     <name>Minify Maven Plugin</name>
@@ -60,7 +60,8 @@
         <connection>scm:git:git://github.com/atlassian/minify-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:atlassian/minify-maven-plugin.git</developerConnection>
         <url>https://github.com/atlassian/minify-maven-plugin</url>
-    </scm>
+      <tag>minify-maven-plugin-1.7.4.atlassian.3</tag>
+  </scm>
 
     <prerequisites>
         <maven>3.0</maven>
